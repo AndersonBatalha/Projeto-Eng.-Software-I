@@ -1,0 +1,821 @@
+(dp1
+S'output'
+p2
+S"<type 'exceptions.AttributeError'> type object 'datetime.datetime' has no attribute 'datetime'"
+p3
+sS'layer'
+p4
+S'/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/Confeitaria/models/db.py'
+p5
+sS'code'
+p6
+S'# -*- coding: utf-8 -*-\n\n# -------------------------------------------------------------------------\n# This scaffolding model makes your app work on Google App Engine too\n# File is released under public domain and you can use without limitations\n# -------------------------------------------------------------------------\n\nfrom datetime import *\n\nif request.global_settings.web2py_version < "2.14.1":\n    raise HTTP(500, "Requires web2py 2.13.3 or newer")\n\n# -------------------------------------------------------------------------\n# if SSL/HTTPS is properly configured and you want all HTTP requests to\n# be redirected to HTTPS, uncomment the line below:\n# -------------------------------------------------------------------------\n# request.requires_https()\n\n# -------------------------------------------------------------------------\n# app configuration made easy. Look inside private/appconfig.ini\n# -------------------------------------------------------------------------\nfrom gluon.contrib.appconfig import AppConfig\n\n# -------------------------------------------------------------------------\n# once in production, remove reload=True to gain full speed\n# -------------------------------------------------------------------------\nmyconf = AppConfig(reload=True)\n\nif not request.env.web2py_runtime_gae:\n    # ---------------------------------------------------------------------\n    # if NOT running on Google App Engine use SQLite or other DB\n    # ---------------------------------------------------------------------\n    db = DAL(myconf.get(\'db.uri\'),\n             pool_size=myconf.get(\'db.pool_size\'),\n             migrate_enabled=myconf.get(\'db.migrate\'),\n             check_reserved=[\'all\'])\nelse:\n    # ---------------------------------------------------------------------\n    # connect to Google BigTable (optional \'google:datastore://namespace\')\n    # ---------------------------------------------------------------------\n    db = DAL(\'google:datastore+ndb\')\n    # ---------------------------------------------------------------------\n    # store sessions and tickets there\n    # ---------------------------------------------------------------------\n    session.connect(request, response, db=db)\n    # ---------------------------------------------------------------------\n    # or store session in Memcache, Redis, etc.\n    # from gluon.contrib.memdb import MEMDB\n    # from google.appengine.api.memcache import Client\n    # session.connect(request, response, db = MEMDB(Client()))\n    # ---------------------------------------------------------------------\n\n# -------------------------------------------------------------------------\n# by default give a view/generic.extension to all actions from localhost\n# none otherwise. a pattern can be \'controller/function.extension\'\n# -------------------------------------------------------------------------\nresponse.generic_patterns = [\'*\'] if request.is_local else []\n# -------------------------------------------------------------------------\n# choose a style for forms\n# -------------------------------------------------------------------------\nresponse.formstyle = myconf.get(\'forms.formstyle\')  # or \'bootstrap3_stacked\' or \'bootstrap2\' or other\nresponse.form_label_separator = myconf.get(\'forms.separator\') or \'\'\n\n# -------------------------------------------------------------------------\n# (optional) optimize handling of static files\n# -------------------------------------------------------------------------\n# response.optimize_css = \'concat,minify,inline\'\n# response.optimize_js = \'concat,minify,inline\'\n\n# -------------------------------------------------------------------------\n# (optional) static assets folder versioning\n# -------------------------------------------------------------------------\n# response.static_version = \'0.0.0\'\n\n# -------------------------------------------------------------------------\n# Here is sample code if you need for\n# - email capabilities\n# - authentication (registration, login, logout, ... )\n# - authorization (role based authorization)\n# - services (xml, csv, json, xmlrpc, jsonrpc, amf, rss)\n# - old style crud actions\n# (more options discussed in gluon/tools.py)\n# -------------------------------------------------------------------------\n\nfrom gluon.tools import Auth, Service, PluginManager\n\n# host names must be a list of allowed host names (glob syntax allowed)\nauth = Auth(db, host_names=myconf.get(\'host.names\'))\nservice = Service()\nplugins = PluginManager()\n\n# -------------------------------------------------------------------------\n# create all tables needed by auth if not custom tables\n# -------------------------------------------------------------------------\nauth.define_tables(username=False, signature=False)\n\n# -------------------------------------------------------------------------\n# configure email\n# -------------------------------------------------------------------------\nmail = auth.settings.mailer\nmail.settings.server = \'logging\' if request.is_local else myconf.get(\'smtp.server\')\nmail.settings.sender = myconf.get(\'smtp.sender\')\nmail.settings.login = myconf.get(\'smtp.login\')\nmail.settings.tls = myconf.get(\'smtp.tls\') or False\nmail.settings.ssl = myconf.get(\'smtp.ssl\') or False\n\n# -------------------------------------------------------------------------\n# configure auth policy\n# -------------------------------------------------------------------------\nauth.settings.registration_requires_verification = False\nauth.settings.registration_requires_approval = False\nauth.settings.reset_password_requires_verification = True\n\n# -------------------------------------------------------------------------\n# Define your tables below (or better in another model file) for example\n#\n# >>> db.define_table(\'mytable\', Field(\'myfield\', \'string\'))\n#\n# Fields can be \'string\',\'text\',\'password\',\'integer\',\'double\',\'boolean\'\n#       \'date\',\'time\',\'datetime\',\'blob\',\'upload\', \'reference TABLENAME\'\n# There is an implicit \'id integer autoincrement\' field\n# Consult manual for more options, validators, etc.\n#\n# More API examples for controllers:\n#\n# >>> db.mytable.insert(myfield=\'value\')\n# >>> rows = db(db.mytable.myfield == \'value\').select(db.mytable.ALL)\n# >>> for row in rows: print row.id, row.myfield\n# -------------------------------------------------------------------------\n\n# -------------------------------------------------------------------------\n# after defining tables, uncomment below to enable auditing\n# -------------------------------------------------------------------------\n# auth.enable_record_versioning(db)\n\nFornecedor = db.define_table(\'fornecedor\',\n\nField(\'razao_social\', \'string\', label=\'Nome da empresa\'),\nField(\'cnpj\', \'string\', label=\'CNPJ da empresa\'),\n\n)\n\nFornecedor.razao_social.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nFornecedor.cnpj.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\n\nTelefone = db.define_table(\'telefone\',\n\nField(\'numeroTelefone\', \'string\', label=\'Telefone\'),\n\n)\n\nCliente = db.define_table(\'clientes\',\n\nField(\'nome\', \'string\', label=\'Nome\'),\nField(\'data_nasc\', \'date\', label=\'Data de nascimento\'),\nField(\'cpf\', \'string\', label=\'CPF\', default=\'000.000.000-00\'),\nField(\'email\', \'string\', label=\'E-mail\', default=\'seuemail@email.com\'),\n\n)\n\nCliente.nome.requires = IS_NOT_EMPTY(error_message=\'Digite aqui seu nome\')\nCliente.data_nasc.requires = IS_NOT_EMPTY(error_message=\'Digite aqui a data de nascimento\')\nCliente.data_nasc.requires = IS_DATE(format=\'%d-%m-%Y\', error_message=\'A data deve estar no formato DD-MM-AAAA\')\nCliente.cpf.requires = IS_NOT_EMPTY(error_message=\'Verifique as informa\xc3\xa7\xc3\xb5es inseridas\')\nCliente.email.requires = IS_EMAIL(error_message=\'Digite um e-mail v\xc3\xa1lido\')\n\n\nTelefone_Cliente = db.define_table(\'telefone_cliente\',\n\nField(\'codTelefone\', \'integer\', \'references telefone\'),\nField(\'codCliente\', \'integer\', \'references clientes\'),\n\n)\n\nagora = datetime.datetime.now()\nhoje = date.today()\nhorario = datetime.datetime.time(agora)\n\n\nPedido = db.define_table(\'pedido\',\n\nField(\'dataPedido\', \'date\', label=\'Data do pedido\', default=hoje),\nField(\'horaPedido\', \'time\', label=\'Hor\xc3\xa1rio\'),\nField(\'dataEntrega\', \'date\', label=\'Data de entrega do pedido (previsto)\'),\nField(\'horaEntrega\', \'time\', label=\'Hor\xc3\xa1rio de entrega (previsto)\', default=\'00:00\'),\n\n)\n\nPedido.dataPedido.requires = IS_DATE(format=\'%d-%m-%Y\', error_message=\'A data deve estar no formato DD/MM/AAAA\')\nPedido.dataEntrega.requires = IS_DATE(format=\'%d-%m-%Y\', error_message=\'A data deve estar no formato DD/MM/AAAA\')\n\nItem = db.define_table(\'item\',\n\nField(\'nome\', \'string\', label=\'Nome do ingrediente\'),\nField(\'descricao\', \'string\', label=\'Descri\xc3\xa7\xc3\xa3o\'),\nField(\'precoUnitario\', \'float\', label=\'Pre\xc3\xa7o por unidade\'),\nField(\'quantidade\', \'integer\', label=\'Quantidade total\'),\nField(\'unidade\', \'string\', label=\'Unidade de medida\'),\nField(\'numeroItens\', \'integer\', label=\'N\xc3\xbamero de itens\'),\n\n)\n\nItem.nome.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nItem.descricao.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nItem.precoUnitario.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nItem.quantidade.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nItem.unidade.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\n\nEndereco = db.define_table(\'endereco\',\n\nField(\'rua\', \'string\', label=\'Nome da rua\'),\nField(\'numero\', \'integer\', label=\'N\xc3\xbamero da resid\xc3\xaancia\'),\nField(\'complemento\', \'string\', label=\'Complemento\'),\nField(\'tipoEndereco\', \'string\', label=\'Tipo do endere\xc3\xa7o\'),\nField(\'bairro\', \'string\', label=\'Bairro\'),\nField(\'cidade\', \'string\', label=\'Cidade\'),\n\n)\n\nEndereco.rua.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nEndereco.numero.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nEndereco.complemento.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nEndereco.tipoEndereco.requires = requires=IS_IN_SET([\'Residencial\', \'Comercial\', \'N\xc3\xa3o informado\'])\nEndereco.bairro.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nEndereco.cidade.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\n\nOrcamento = db.define_table(\'orcamento\',\n\nField(\'codCliente\', \'integer\', \'references clientes\'),\nField(\'codPedido\', \'integer\', \'references pedido\'),\nField(\'dataOrcamento\', \'date\', label=\'Data de emiss\xc3\xa3o do or\xc3\xa7amento\'),\nField(\'valorTotal\', \'float\', label=\'Valor total dos pre\xc3\xa7os\'),\nField(\'desconto\', \'float\', label=\'Descontos\'),\nField(\'precoFinal\', \'float\', label=\'Pre\xc3\xa7o final de venda\'),\n\n)\n\nOrcamento.dataOrcamento.requires = IS_DATE(format=\'%d-%m-%Y\', error_message=\'A data deve estar no formato DD/MM/AAAA\')\nOrcamento.dataOrcamento.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nOrcamento.valorTotal.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nOrcamento.desconto.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nOrcamento.precoFinal.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\n\nProduto = db.define_table(\'produto\',\n\nField(\'nome\', \'float\', label=\'Nome do produto\'),\nField(\'descricao\', \'string\', label=\'Descri\xc3\xa7\xc3\xa3o\'),\nField(\'custoIngredientes\', \'float\', label=\'Custo total de todos os ingredientes\'),\nField(\'custoFabricacao\', \'float\', label=\'Custo da fabrica\xc3\xa7\xc3\xa3o\'),\nField(\'custoFinalProd\', \'float\', label=\'Custo final calculado\'),\n\n)\n\nProduto.nome.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nProduto.descricao.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nProduto.custoIngredientes.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nProduto.custoFabricacao.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\nProduto.custoFinalProd.requires = IS_NOT_EMPTY(error_message=\'Preencha os campos corretamente\')\n\nFornecedor_Item = db.define_table(\'fornecedor_item\',\n\nField(\'cod_Item\', \'integer\', \'references item\'),\nField(\'codFornecedor\', \'integer\', \'references fornecedor\'),\n\n)\n\nProduto_Item = db.define_table(\'produto_item\',\n\nField(\'cod_Item\', \'integer\', \'references item\'),\nField(\'codProduto\', \'integer\', \'references produto\'),\n\n)\n\nOrcamento_Produto = db.define_table(\'orcamento_produto\',\n\nField(\'codOrcamento\', \'integer\', \'references orcamento\'),\nField(\'codProduto\', \'integer\', \'references produto\'),\n\n)\n\n\nTelefone_Fornecedor = db.define_table(\'telefone_fornecedor\',\n\nField(\'codTelefone\', \'integer\', \'references telefone\'),\nField(\'codFornecedor\', \'integer\', \'references fornecedor\'),\n\n)\n\nEndereco_Pedido = db.define_table(\'endereco_pedido\',\n\nField(\'codEndereco\', \'integer\', \'references endereco\'),\nField(\'codPedido\', \'integer\', \'references pedido\'),\n\n)\n\nEndereco_Cliente = db.define_table(\'endereco_cliente\',\n\nField(\'codEndereco\', \'integer\', \'references endereco\'),\nField(\'codCliente\', \'integer\', \'references clientes\'),\n\n)\n\nEndereco_Fornecedor = db.define_table(\'endereco_fornecedor\',\n\nField(\'codEndereco\', \'integer\', \'references endereco\'),\nField(\'codFornecedor\', \'integer\', \'references fornecedor\'),\n\n)\n'
+p7
+sS'snapshot'
+p8
+(dp9
+S'exception'
+p10
+(dp11
+S'__hash__'
+p12
+S"<method-wrapper '__hash__' of exceptions.AttributeError object>"
+p13
+sS'__setattr__'
+p14
+S"<method-wrapper '__setattr__' of exceptions.AttributeError object>"
+p15
+sS'__reduce_ex__'
+p16
+S'<built-in method __reduce_ex__ of exceptions.AttributeError object>'
+p17
+sS'__getslice__'
+p18
+S"<method-wrapper '__getslice__' of exceptions.AttributeError object>"
+p19
+sS'__getitem__'
+p20
+S"<method-wrapper '__getitem__' of exceptions.AttributeError object>"
+p21
+sS'__setstate__'
+p22
+S'<built-in method __setstate__ of exceptions.AttributeError object>'
+p23
+sS'args'
+p24
+S'("type object \'datetime.datetime\' has no attribute \'datetime\'",)'
+p25
+sS'__reduce__'
+p26
+S'<built-in method __reduce__ of exceptions.AttributeError object>'
+p27
+sS'__str__'
+p28
+S"<method-wrapper '__str__' of exceptions.AttributeError object>"
+p29
+sS'__format__'
+p30
+S'<built-in method __format__ of exceptions.AttributeError object>'
+p31
+sS'__getattribute__'
+p32
+S"<method-wrapper '__getattribute__' of exceptions.AttributeError object>"
+p33
+sS'__class__'
+p34
+S"<type 'exceptions.AttributeError'>"
+p35
+sS'__unicode__'
+p36
+S'<built-in method __unicode__ of exceptions.AttributeError object>'
+p37
+sS'__delattr__'
+p38
+S"<method-wrapper '__delattr__' of exceptions.AttributeError object>"
+p39
+sS'__subclasshook__'
+p40
+S'<built-in method __subclasshook__ of type object>'
+p41
+sS'__repr__'
+p42
+S"<method-wrapper '__repr__' of exceptions.AttributeError object>"
+p43
+sS'__dict__'
+p44
+S'{}'
+p45
+sS'__sizeof__'
+p46
+S'<built-in method __sizeof__ of exceptions.AttributeError object>'
+p47
+sS'__doc__'
+p48
+S"'Attribute not found.'"
+p49
+sS'__init__'
+p50
+S"<method-wrapper '__init__' of exceptions.AttributeError object>"
+p51
+sS'__new__'
+p52
+S'<built-in method __new__ of type object>'
+p53
+ssS'evalue'
+p54
+S"type object 'datetime.datetime' has no attribute 'datetime'"
+p55
+sS'request'
+p56
+cgluon.html
+XML_unpickle
+p57
+(S's\x05p\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top;">ajax</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">application</td><td style="vertical-align:top;">:</td><td><div>Confeitaria</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cid</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">client</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">controller</td><td style="vertical-align:top;">:</td><td><div>default</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cookies</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">session_data_examples</td><td style="vertical-align:top;">:</td><td><div>4698216bec1a93ca446e179067ab0c35:S1By5FjBF8A3p4X6hh1ADNDRM3tOl6TgibOyeFYOUwEDmaItrUBuq6tjYDs1xxTC9rvcWFpneCcE3F6z-WAPA2pbWeDFARamw44qjM7b5XyVFKi3_YGBenFw3pSRlJFH5ot14Rmyz0dVx5VLvOpyI-3UPCK1PWWtPwTxVbMImFQdc0625zMUiVJgzF0jdtRpbxVY3M8Le2zVQlvnp-s76BGVzcRJoju5vYoEoXV_8i64HDqHYlrJnLMqQozi8_Rcm36aBhXmagccPGrZbKZudbaLJq1GtM5sUYY5aOO3rAX9KWhCvFeUPgBRbwHTl7HVGyjnjn48z6uLaqMF53Dg93d31E_QatrD85EiJ1UV3D4=<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_admin</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-1ad705c3-f204-453f-9671-519926c06b33<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_confeitaria</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-0b594646-e22a-4bd6-8c0f-c14f4589c294<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_examples</td><td style="vertical-align:top;">:</td><td><div>True<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_welcome</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-97e02901-1c59-43ad-9d9c-2ae9068c3598<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">env</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT</td><td style="vertical-align:top;">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT_ENCODING</td><td style="vertical-align:top;">:</td><td><div>gzip, deflate, sdch</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT_LANGUAGE</td><td style="vertical-align:top;">:</td><td><div>pt-BR,pt;q=0.8,en-US;q=0.6,en;q=0.4</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_CACHE_CONTROL</td><td style="vertical-align:top;">:</td><td><div>max-age=0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_CONNECTION</td><td style="vertical-align:top;">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_COOKIE</td><td style="vertical-align:top;">:</td><td><div>session_id_welcome=127.0.0.1-97e02901-1c59-43ad-9d9c-2ae9068c3598; session_data_examples=&quot;4698216bec1a93ca446e179067ab0c35:S1By5FjBF8A3p4X6hh1ADNDRM3tOl6TgibOyeFYOUwEDmaItrUBuq6tjYDs1xxTC9rvcWFpneCcE3F6z-WAPA2pbWeDFARamw44qjM7b5XyVFKi3_YGBenFw3pSRlJFH5ot14Rmyz0dVx5VLvOpyI-3UPCK1PWWtPwTxVbMImFQdc0625zMUiVJgzF0jdtRpbxVY3M8Le2zVQlvnp-s76BGVzcRJoju5vYoEoXV_8i64HDqHYlrJnLMqQozi8_Rcm36aBhXmagccPGrZbKZudbaLJq1GtM5sUYY5aOO3rAX9KWhCvFeUPgBRbwHTl7HVGyjnjn48z6uLaqMF53Dg93d31E_QatrD85EiJ1UV3D4=&quot;; session_id_examples=True; session_id_admin=127.0.0.1-1ad705c3-f204-453f-9671-519926c06b33; session_id_confeitaria=127.0.0.1-0b594646-e22a-4bd6-8c0f-c14f4589c294</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_HOST</td><td style="vertical-align:top;">:</td><td><div>localhost:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_REFERER</td><td style="vertical-align:top;">:</td><td><div>http://localhost:8000/admin/default/design/Confeitaria</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_UPGRADE_INSECURE_REQUESTS</td><td style="vertical-align:top;">:</td><td><div>1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_USER_AGENT</td><td style="vertical-align:top;">:</td><td><div>Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">PATH_INFO</td><td style="vertical-align:top;">:</td><td><div>/Confeitaria/default/CadastrarPedido</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">QUERY_STRING</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REMOTE_ADDR</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REMOTE_PORT</td><td style="vertical-align:top;">:</td><td><div>48126</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REQUEST_METHOD</td><td style="vertical-align:top;">:</td><td><div>GET</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SCRIPT_NAME</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_NAME</td><td style="vertical-align:top;">:</td><td><div>anderson-Aspire-4745</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_PORT</td><td style="vertical-align:top;">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_PROTOCOL</td><td style="vertical-align:top;">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_SOFTWARE</td><td style="vertical-align:top;">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">app_folders</td><td style="vertical-align:top;">:</td><td><div>set([&#x27;/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/admin/&#x27;, &#x27;/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/welcome/&#x27;, &#x27;/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/Confeitaria/&#x27;, &#x27;/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/examples/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">applications_parent</td><td style="vertical-align:top;">:</td><td><div>/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_options</td><td style="vertical-align:top;">:</td><td><div>&lt;Values at 0x7f724dd4c488: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;with_scheduler&#x27;: False, &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;anderson-Aspire-4745&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;port&#x27;: 8000, &#x27;print_errors&#x27;: False, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;profiler_dir&#x27;: None, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;interfaces&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;gae&#x27;: None, &#x27;password&#x27;: &#x27;******&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">db_sessions</td><td style="vertical-align:top;">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">debugging</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">gluon_parent</td><td style="vertical-align:top;">:</td><td><div>/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept</td><td style="vertical-align:top;">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept_encoding</td><td style="vertical-align:top;">:</td><td><div>gzip, deflate, sdch</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept_language</td><td style="vertical-align:top;">:</td><td><div>pt-BR,pt;q=0.8,en-US;q=0.6,en;q=0.4</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_cache_control</td><td style="vertical-align:top;">:</td><td><div>max-age=0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_connection</td><td style="vertical-align:top;">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_cookie</td><td style="vertical-align:top;">:</td><td><div>session_id_welcome=127.0.0.1-97e02901-1c59-43ad-9d9c-2ae9068c3598; session_data_examples=&quot;4698216bec1a93ca446e179067ab0c35:S1By5FjBF8A3p4X6hh1ADNDRM3tOl6TgibOyeFYOUwEDmaItrUBuq6tjYDs1xxTC9rvcWFpneCcE3F6z-WAPA2pbWeDFARamw44qjM7b5XyVFKi3_YGBenFw3pSRlJFH5ot14Rmyz0dVx5VLvOpyI-3UPCK1PWWtPwTxVbMImFQdc0625zMUiVJgzF0jdtRpbxVY3M8Le2zVQlvnp-s76BGVzcRJoju5vYoEoXV_8i64HDqHYlrJnLMqQozi8_Rcm36aBhXmagccPGrZbKZudbaLJq1GtM5sUYY5aOO3rAX9KWhCvFeUPgBRbwHTl7HVGyjnjn48z6uLaqMF53Dg93d31E_QatrD85EiJ1UV3D4=&quot;; session_id_examples=True; session_id_admin=127.0.0.1-1ad705c3-f204-453f-9671-519926c06b33; session_id_confeitaria=127.0.0.1-0b594646-e22a-4bd6-8c0f-c14f4589c294</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_host</td><td style="vertical-align:top;">:</td><td><div>localhost:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_referer</td><td style="vertical-align:top;">:</td><td><div>http://localhost:8000/admin/default/design/Confeitaria</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_upgrade_insecure_requests</td><td style="vertical-align:top;">:</td><td><div>1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_user_agent</td><td style="vertical-align:top;">:</td><td><div>Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_jython</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_pypy</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_source</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">local_hosts</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>anderson-Aspire-4745</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>127.0.1.1</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path_info</td><td style="vertical-align:top;">:</td><td><div>/Confeitaria/default/CadastrarPedido</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">query_string</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">remote_addr</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">remote_port</td><td style="vertical-align:top;">:</td><td><div>48126</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">request_method</td><td style="vertical-align:top;">:</td><td><div>GET</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">request_uri</td><td style="vertical-align:top;">:</td><td><div>/Confeitaria/default/CadastrarPedido</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">script_name</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_name</td><td style="vertical-align:top;">:</td><td><div>anderson-Aspire-4745</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_port</td><td style="vertical-align:top;">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_protocol</td><td style="vertical-align:top;">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_software</td><td style="vertical-align:top;">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_path</td><td style="vertical-align:top;">:</td><td><div>/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_version</td><td style="vertical-align:top;">:</td><td><div>2.14.6-stable+timestamp.2016.05.10.00.21.47</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.errors</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0x7f72571fa1e0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.file_wrapper</td><td style="vertical-align:top;">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0x7f724e18fe88&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.input</td><td style="vertical-align:top;">:</td><td><div>&lt;socket._fileobject object at 0x7f724de8f250&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.multiprocess</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.multithread</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.run_once</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.url_scheme</td><td style="vertical-align:top;">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.version</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>0</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_errors</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0x7f72571fa1e0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_file_wrapper</td><td style="vertical-align:top;">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0x7f724e18fe88&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_input</td><td style="vertical-align:top;">:</td><td><div>&lt;socket._fileobject object at 0x7f724de8f250&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_multiprocess</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_multithread</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_run_once</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_url_scheme</td><td style="vertical-align:top;">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_version</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>0</div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">extension</td><td style="vertical-align:top;">:</td><td><div>html</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">folder</td><td style="vertical-align:top;">:</td><td><div>/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/Confeitaria/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">function</td><td style="vertical-align:top;">:</td><td><div>CadastrarPedido</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">global_settings</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">app_folders</td><td style="vertical-align:top;">:</td><td><div>set([&#x27;/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/admin/&#x27;, &#x27;/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/welcome/&#x27;, &#x27;/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/Confeitaria/&#x27;, &#x27;/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/examples/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">applications_parent</td><td style="vertical-align:top;">:</td><td><div>/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_options</td><td style="vertical-align:top;">:</td><td><div>&lt;Values at 0x7f724dd4c488: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;with_scheduler&#x27;: False, &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;anderson-Aspire-4745&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;port&#x27;: 8000, &#x27;print_errors&#x27;: False, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;profiler_dir&#x27;: None, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;interfaces&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;gae&#x27;: None, &#x27;password&#x27;: &#x27;******&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">db_sessions</td><td style="vertical-align:top;">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">debugging</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">gluon_parent</td><td style="vertical-align:top;">:</td><td><div>/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_jython</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_pypy</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_source</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">local_hosts</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>anderson-Aspire-4745</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>127.0.1.1</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_version</td><td style="vertical-align:top;">:</td><td><div>2.14.6-stable+timestamp.2016.05.10.00.21.47</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_https</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_local</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_restful</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_scheduler</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_shell</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">now</td><td style="vertical-align:top;">:</td><td><div>datetime.datetime(2016, 7, 6, 21, 0, 5, 651800)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">raw_args</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">raw_extension</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">url</td><td style="vertical-align:top;">:</td><td><div>/Confeitaria/default/CadastrarPedido</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">utcnow</td><td style="vertical-align:top;">:</td><td><div>datetime.datetime(2016, 7, 7, 0, 0, 5, 651823)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi</td><td style="vertical-align:top;">:</td><td><div>&lt;gluon.main.LazyWSGI object at 0x7f7230a4b310&gt;</div></td></tr></table></div>'
+tRp58
+sS'frames'
+p59
+(lp60
+(dp61
+S'file'
+p62
+S'/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/gluon/restricted.py'
+p63
+sS'dump'
+p64
+(dp65
+S'environment'
+p66
+S"{'A': <class 'gluon.html.A'>, 'ANY_OF': <class 'gluon.validators.ANY_OF'>, 'ASSIGNJS': <function ASSIGNJS>, 'AppConfig': <function AppConfig>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, 'BUTTON': <class 'gluon.html.BUTTON'>, ...}"
+p67
+sS'ccode'
+p68
+S'<code object <module> at 0x7f724dd6d330, file "/...y/applications/Confeitaria/models/db.py", line 8>'
+p69
+ssS'lnum'
+p70
+I227
+sS'lines'
+p71
+(dp72
+I224
+S'            ccode = code'
+p73
+sI225
+S'        else:'
+p74
+sI226
+S'            ccode = compile2(code, layer)'
+p75
+sI227
+S'        exec ccode in environment'
+p76
+sI228
+S'    except HTTP:'
+p77
+sI229
+S'        raise'
+p78
+sI230
+S'    except RestrictedError:'
+p79
+sI231
+S'        # do not encapsulate (obfuscate) the original RestrictedError'
+p80
+sI222
+S'    try:'
+p81
+sI223
+S'        if isinstance(code, types.CodeType):'
+p82
+ssS'call'
+p83
+S'(code="# -*- coding: utf-8 -*-\\n\\n# ---------------------...ecedor\', \'integer\', \'references fornecedor\'),\\n\\n)\\n", environment={\'A\': <class \'gluon.html.A\'>, \'ANY_OF\': <class \'gluon.validators.ANY_OF\'>, \'ASSIGNJS\': <function ASSIGNJS>, \'AppConfig\': <function AppConfig>, \'Auth\': <class \'gluon.tools.Auth\'>, \'B\': <class \'gluon.html.B\'>, \'BEAUTIFY\': <class \'gluon.html.BEAUTIFY\'>, \'BODY\': <class \'gluon.html.BODY\'>, \'BR\': <class \'gluon.html.BR\'>, \'BUTTON\': <class \'gluon.html.BUTTON\'>, ...}, layer=\'/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia ...lina/web2py/applications/Confeitaria/models/db.py\')'
+p84
+sS'func'
+p85
+S'restricted'
+p86
+sa(dp87
+g62
+S'/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/Confeitaria/models/db.py'
+p88
+sg64
+(dp89
+S'datetime.datetime'
+p90
+S'undefined'
+p91
+sS'agora'
+p92
+g91
+sS'datetime'
+p93
+S"<type 'datetime.datetime'>"
+p94
+ssg70
+I175
+sg71
+(dp95
+I170
+S"Field('codTelefone', 'integer', 'references telefone'),"
+p96
+sI171
+S"Field('codCliente', 'integer', 'references clientes'),"
+p97
+sI172
+S''
+sI173
+S')'
+sI174
+S''
+sI175
+S'agora = datetime.datetime.now()'
+p98
+sI176
+S'hoje = date.today()'
+p99
+sI177
+S'horario = datetime.datetime.time(agora)'
+p100
+sI178
+S''
+sI179
+S''
+ssg83
+S'()'
+p101
+sg85
+S'<module>'
+p102
+sasS'pyver'
+p103
+S'Python 2.7.11+: /usr/bin/python (prefix: /usr)'
+p104
+sS'session'
+p105
+g57
+(S's\x1a\x00\x00\x00<div><table></table></div>'
+tRp106
+sS'etype'
+p107
+S"<type 'exceptions.AttributeError'>"
+p108
+sS'date'
+p109
+S'Wed Jul  6 21:00:05 2016'
+p110
+sS'response'
+p111
+g57
+(S's\x18\x18\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top;">body</td><td style="vertical-align:top;">:</td><td><div>&lt;cStringIO.StringO object at 0x7f7230963f48&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cookies</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">session_id_confeitaria</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-0b594646-e22a-4bd6-8c0f-c14f4589c294<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div>/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">delimiters</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>{{</div></td></tr><tr><td><div>}}</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">files</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">flash</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">form_label_separator</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">formstyle</td><td style="vertical-align:top;">:</td><td><div>bootstrap3_inline</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">generic_patterns</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>*</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">headers</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">X-Powered-By</td><td style="vertical-align:top;">:</td><td><div>web2py</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">menu</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">meta</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">models_to_run</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>^\\w+\\.py$</div></td></tr><tr><td><div>^default/\\w+\\.py$</div></td></tr><tr><td><div>^default/CadastrarPedido/\\w+\\.py$</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">postprocessing</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_client</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_compression_level</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_expires</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_data_name</td><td style="vertical-align:top;">:</td><td><div>session_data_confeitaria</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_file</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/Confeitaria/sessions/065/099/127.0.0.1-0b594646-e22a-4bd6-8c0f-c14f4589c294&#x27;, mode &#x27;rb+&#x27; at 0x7f72309d31e0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_filename</td><td style="vertical-align:top;">:</td><td><div>/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/Confeitaria/sessions/127.0.0.1-0b594646-e22a-4bd6-8c0f-c14f4589c294</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_hash</td><td style="vertical-align:top;">:</td><td><div>521f02bf539229001c13e7d503b44eea</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-0b594646-e22a-4bd6-8c0f-c14f4589c294</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_name</td><td style="vertical-align:top;">:</td><td><div>session_id_confeitaria</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_locked</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_masterapp</td><td style="vertical-align:top;">:</td><td><div>Confeitaria</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_new</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_storage_type</td><td style="vertical-align:top;">:</td><td><div>file</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">status</td><td style="vertical-align:top;">:</td><td><div>200</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">view</td><td style="vertical-align:top;">:</td><td><div>default/CadastrarPedido.html</div></td></tr></table></div>'
+tRp112
+sS'locals'
+p113
+(dp114
+S'Service'
+p115
+S"<class 'gluon.tools.Service'>"
+p116
+sS'OBJECT'
+p117
+S"<class 'gluon.html.OBJECT'>"
+p118
+sS'SQLDB'
+p119
+S"<class 'pydal.base.DAL'>"
+p120
+sg105
+S"<Storage {'_formkey[orcamento/create]': ['b4223e...c76fb', 'c92c4ef4-a910-4c4a-a926-fd667cc3dc82']}>"
+p121
+sS'LINK'
+p122
+S"<class 'gluon.html.LINK'>"
+p123
+sS'BR'
+p124
+S"<class 'gluon.html.BR'>"
+p125
+sS'local_import'
+p126
+S'<function <lambda>>'
+p127
+sS'OPTGROUP'
+p128
+S"<class 'gluon.html.OPTGROUP'>"
+p129
+sS'LI'
+p130
+S"<class 'gluon.html.LI'>"
+p131
+sS'PRE'
+p132
+S"<class 'gluon.html.PRE'>"
+p133
+sS'IS_INT_IN_RANGE'
+p134
+S"<class 'gluon.validators.IS_INT_IN_RANGE'>"
+p135
+sS'IS_LOWER'
+p136
+S"<class 'gluon.validators.IS_LOWER'>"
+p137
+sS'IS_STRONG'
+p138
+S"<class 'gluon.validators.IS_STRONG'>"
+p139
+sS'cache'
+p140
+S'<gluon.cache.Cache object>'
+p141
+sS'IS_IN_DB'
+p142
+S"<class 'gluon.validators.IS_IN_DB'>"
+p143
+sS'TAG'
+p144
+S'<gluon.html.__TAG__ object>'
+p145
+sS'SQLField'
+p146
+S"<class 'pydal.objects.Field'>"
+p147
+sS'mail'
+p148
+S'<gluon.tools.Mail object>'
+p149
+sS'BODY'
+p150
+S"<class 'gluon.html.BODY'>"
+p151
+sS'IS_DATE_IN_RANGE'
+p152
+S"<class 'gluon.validators.IS_DATE_IN_RANGE'>"
+p153
+sS'TH'
+p154
+S"<class 'gluon.html.TH'>"
+p155
+sS'URL'
+p156
+S'<function URL>'
+p157
+sS'__file__'
+p158
+S"'/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia ...lina/web2py/applications/Confeitaria/models/db.py'"
+p159
+sS'db'
+p160
+S'<DAL uri="sqlite://storage.sqlite">'
+p161
+sS'auth'
+p162
+S'<gluon.tools.Auth object>'
+p163
+sS'P'
+S"<class 'gluon.html.P'>"
+p164
+sS'TFOOT'
+p165
+S"<class 'gluon.html.TFOOT'>"
+p166
+sS'XHTML'
+p167
+S"<class 'gluon.html.XHTML'>"
+p168
+sS'datetime'
+p169
+S"<type 'datetime.datetime'>"
+p170
+sS'ON'
+p171
+S'True'
+p172
+sS'OL'
+p173
+S"<class 'gluon.html.OL'>"
+p174
+sS'TEXTAREA'
+p175
+S"<class 'gluon.html.TEXTAREA'>"
+p176
+sS'MENU'
+p177
+S"<class 'gluon.html.MENU'>"
+p178
+sS'datetime_CAPI'
+p179
+S'<capsule object "datetime.datetime_CAPI">'
+p180
+sS'IS_IMAGE'
+p181
+S"<class 'gluon.validators.IS_IMAGE'>"
+p182
+sS'LOAD'
+p183
+S'<function LOAD>'
+p184
+sS'CODE'
+p185
+S"<class 'gluon.html.CODE'>"
+p186
+sS'HTTP'
+p187
+S"<class 'gluon.http.HTTP'>"
+p188
+sS'HR'
+p189
+S"<class 'gluon.html.HR'>"
+p190
+sS'IS_DATETIME'
+p191
+S"<class 'gluon.validators.IS_DATETIME'>"
+p192
+sS'HEAD'
+p193
+S"<class 'gluon.html.HEAD'>"
+p194
+sS'LABEL'
+p195
+S"<class 'gluon.html.LABEL'>"
+p196
+sS'CLEANUP'
+p197
+S"<class 'gluon.validators.CLEANUP'>"
+p198
+sS'Telefone'
+p199
+S'<Table telefone (id, numeroTelefone)>'
+p200
+sS'plugins'
+p201
+S'<gluon.tools.PluginManager object>'
+p202
+sS'SELECT'
+p203
+S"<class 'gluon.html.SELECT'>"
+p204
+sS'CENTER'
+p205
+S"<class 'gluon.html.CENTER'>"
+p206
+sS'Auth'
+p207
+S"<class 'gluon.tools.Auth'>"
+p208
+sS'__builtins__'
+p209
+S"{'ArithmeticError': <type 'exceptions.ArithmeticError'>, 'AssertionError': <type 'exceptions.AssertionError'>, 'AttributeError': <type 'exceptions.AttributeError'>, 'BaseException': <type 'exceptions.BaseException'>, 'BufferError': <type 'exceptions.BufferError'>, 'BytesWarning': <type 'exceptions.BytesWarning'>, 'DeprecationWarning': <type 'exceptions.DeprecationWarning'>, 'EOFError': <type 'exceptions.EOFError'>, 'Ellipsis': Ellipsis, 'EnvironmentError': <type 'exceptions.EnvironmentError'>, ...}"
+p210
+sS'HTML'
+p211
+S"<class 'gluon.html.HTML'>"
+p212
+sS'SQLFORM'
+p213
+S"<class 'gluon.sqlhtml.SQLFORM'>"
+p214
+sS'EM'
+p215
+S"<class 'gluon.html.EM'>"
+p216
+sS'redirect'
+p217
+S'<function redirect>'
+p218
+sS'FIELDSET'
+p219
+S"<class 'gluon.html.FIELDSET'>"
+p220
+sS'IS_EQUAL_TO'
+p221
+S"<class 'gluon.validators.IS_EQUAL_TO'>"
+p222
+sS'embed64'
+p223
+S'<function embed64>'
+p224
+sS'IS_LIST_OF'
+p225
+S"<class 'gluon.validators.IS_LIST_OF'>"
+p226
+sS'__name__'
+p227
+S"'__restricted__'"
+p228
+sS'EMBED'
+p229
+S"<class 'gluon.html.EMBED'>"
+p230
+sS'FORM'
+p231
+S"<class 'gluon.html.FORM'>"
+p232
+sS'myconf'
+p233
+S"{'forms': {'formstyle': 'bootstrap3_inline', 'se...': {'names': 'localhost:*, 127.0.0.1:*, *:*, *'}}"
+p234
+sS'H2'
+p235
+S"<class 'gluon.html.H2'>"
+p236
+sS'H3'
+p237
+S"<class 'gluon.html.H3'>"
+p238
+sS'AppConfig'
+p239
+S'<function AppConfig>'
+p240
+sS'H1'
+p241
+S"<class 'gluon.html.H1'>"
+p242
+sS'H6'
+p243
+S"<class 'gluon.html.H6'>"
+p244
+sS'H4'
+p245
+S"<class 'gluon.html.H4'>"
+p246
+sS'H5'
+p247
+S"<class 'gluon.html.H5'>"
+p248
+sS'UL'
+p249
+S"<class 'gluon.html.UL'>"
+p250
+sS'IS_UPPER'
+p251
+S"<class 'gluon.validators.IS_UPPER'>"
+p252
+sS'xmlescape'
+p253
+S'<function xmlescape>'
+p254
+sS'IS_TIME'
+p255
+S"<class 'gluon.validators.IS_TIME'>"
+p256
+sS'OPTION'
+p257
+S"<class 'gluon.html.OPTION'>"
+p258
+sS'TITLE'
+p259
+S"<class 'gluon.html.TITLE'>"
+p260
+sS'CRYPT'
+p261
+S"<class 'gluon.validators.CRYPT'>"
+p262
+sS'IS_EMPTY_OR'
+p263
+S"<class 'gluon.validators.IS_EMPTY_OR'>"
+p264
+sS'MARKMIN'
+p265
+S"<class 'gluon.html.MARKMIN'>"
+p266
+sS'Fornecedor'
+p267
+S'<Table fornecedor (id, razao_social, cnpj)>'
+p268
+sS'INPUT'
+p269
+S"<class 'gluon.html.INPUT'>"
+p270
+sS'STRONG'
+p271
+S"<class 'gluon.html.STRONG'>"
+p272
+sS'COL'
+p273
+S"<class 'gluon.html.COL'>"
+p274
+sS'service'
+p275
+S'<gluon.tools.Service object>'
+p276
+sS'SCRIPT'
+p277
+S"<class 'gluon.html.SCRIPT'>"
+p278
+sS'TABLE'
+p279
+S"<class 'gluon.html.TABLE'>"
+p280
+sS'IS_IPV4'
+p281
+S"<class 'gluon.validators.IS_IPV4'>"
+p282
+sS'IS_LENGTH'
+p283
+S"<class 'gluon.validators.IS_LENGTH'>"
+p284
+sS'IS_IPV6'
+p285
+S"<class 'gluon.validators.IS_IPV6'>"
+p286
+sS'XML'
+p287
+S"<class 'gluon.html.XML'>"
+p288
+sS'B'
+S"<class 'gluon.html.B'>"
+p289
+sS'IMG'
+p290
+S"<class 'gluon.html.IMG'>"
+p291
+sS'SQLTABLE'
+p292
+S"<class 'gluon.sqlhtml.SQLTABLE'>"
+p293
+sS'IS_MATCH'
+p294
+S"<class 'gluon.validators.IS_MATCH'>"
+p295
+sS'IS_ALPHANUMERIC'
+p296
+S"<class 'gluon.validators.IS_ALPHANUMERIC'>"
+p297
+sS'tzinfo'
+p298
+S"<type 'datetime.tzinfo'>"
+p299
+sS'Cliente'
+p300
+S'<Table clientes (id, nome, data_nasc, cpf, email)>'
+p301
+sS'SPAN'
+p302
+S"<class 'gluon.html.SPAN'>"
+p303
+sS'IS_JSON'
+p304
+S"<class 'gluon.validators.IS_JSON'>"
+p305
+sS'IS_IPADDRESS'
+p306
+S"<class 'gluon.validators.IS_IPADDRESS'>"
+p307
+sS'IS_SLUG'
+p308
+S"<class 'gluon.validators.IS_SLUG'>"
+p309
+sS'BEAUTIFY'
+p310
+S"<class 'gluon.html.BEAUTIFY'>"
+p311
+sS'META'
+p312
+S"<class 'gluon.html.META'>"
+p313
+sS'BUTTON'
+p314
+S"<class 'gluon.html.BUTTON'>"
+p315
+sS'IS_DATE'
+p316
+S"<class 'gluon.validators.IS_DATE'>"
+p317
+sS'IS_EMAIL'
+p318
+S"<class 'gluon.validators.IS_EMAIL'>"
+p319
+sS'IS_NOT_EMPTY'
+p320
+S"<class 'gluon.validators.IS_NOT_EMPTY'>"
+p321
+sS'IS_FLOAT_IN_RANGE'
+p322
+S"<class 'gluon.validators.IS_FLOAT_IN_RANGE'>"
+p323
+sS'TBODY'
+p324
+S"<class 'gluon.html.TBODY'>"
+p325
+sS'CAT'
+p326
+S"<class 'gluon.html.CAT'>"
+p327
+sS'Field'
+p328
+S"<class 'pydal.objects.Field'>"
+p329
+sS'IS_LIST_OF_EMAILS'
+p330
+S"<class 'gluon.validators.IS_LIST_OF_EMAILS'>"
+p331
+sS'MINYEAR'
+p332
+S'1'
+sS'DIV'
+p333
+S"<class 'gluon.html.DIV'>"
+p334
+sS'LEGEND'
+p335
+S"<class 'gluon.html.LEGEND'>"
+p336
+sS'COLGROUP'
+p337
+S"<class 'gluon.html.COLGROUP'>"
+p338
+sS'DAL'
+p339
+S"<class 'pydal.base.DAL'>"
+p340
+sS'ASSIGNJS'
+p341
+S'<function ASSIGNJS>'
+p342
+sS'TR'
+p343
+S"<class 'gluon.html.TR'>"
+p344
+sS'__package__'
+p345
+S'None'
+p346
+sS'IFRAME'
+p347
+S"<class 'gluon.html.IFRAME'>"
+p348
+sS'TD'
+p349
+S"<class 'gluon.html.TD'>"
+p350
+sS'PluginManager'
+p351
+S"<class 'gluon.tools.PluginManager'>"
+p352
+sS'IS_URL'
+p353
+S"<class 'gluon.validators.IS_URL'>"
+p354
+sS'A'
+S"<class 'gluon.html.A'>"
+p355
+sS'STYLE'
+p356
+S"<class 'gluon.html.STYLE'>"
+p357
+sS'IS_DATETIME_IN_RANGE'
+p358
+S"<class 'gluon.validators.IS_DATETIME_IN_RANGE'>"
+p359
+sS'Telefone_Cliente'
+p360
+S'<Table telefone_cliente (id, codTelefone, codCliente)>'
+p361
+sS'timedelta'
+p362
+S"<type 'datetime.timedelta'>"
+p363
+sS'I'
+S"<class 'gluon.html.I'>"
+p364
+sS'IS_NOT_IN_DB'
+p365
+S"<class 'gluon.validators.IS_NOT_IN_DB'>"
+p366
+sg109
+S"<type 'datetime.date'>"
+p367
+sg111
+S"<Storage {'body': <cStringIO.StringO object at 0...3d1488>, 'view': 'default/CadastrarPedido.html'}>"
+p368
+sS'THEAD'
+p369
+S"<class 'gluon.html.THEAD'>"
+p370
+sS'ANY_OF'
+p371
+S"<class 'gluon.validators.ANY_OF'>"
+p372
+sS'IS_NULL_OR'
+p373
+S"<class 'gluon.validators.IS_EMPTY_OR'>"
+p374
+sS'MAXYEAR'
+p375
+S'9999'
+p376
+sg56
+S"<Storage {'_vars': None, 'function': 'CadastrarP...to disciplina/web2py/applications/Confeitaria/'}>"
+p377
+sS'IS_EXPR'
+p378
+S"<class 'gluon.validators.IS_EXPR'>"
+p379
+sS'IS_IN_SET'
+p380
+S"<class 'gluon.validators.IS_IN_SET'>"
+p381
+sS'IS_UPLOAD_FILENAME'
+p382
+S"<class 'gluon.validators.IS_UPLOAD_FILENAME'>"
+p383
+sS'time'
+p384
+S"<type 'datetime.time'>"
+p385
+sS'IS_DECIMAL_IN_RANGE'
+p386
+S"<class 'gluon.validators.IS_DECIMAL_IN_RANGE'>"
+p387
+sS'TT'
+p388
+S"<class 'gluon.html.TT'>"
+p389
+sS'T'
+S'<gluon.languages.translator object>'
+p390
+sssS'traceback'
+p391
+S'Traceback (most recent call last):\n  File "/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/gluon/restricted.py", line 227, in restricted\n    exec ccode in environment\n  File "/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/Confeitaria/models/db.py", line 175, in <module>\n    agora = datetime.datetime.now()\nAttributeError: type object \'datetime.datetime\' has no attribute \'datetime\'\n'
+p392
+s.

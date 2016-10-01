@@ -1,0 +1,141 @@
+# -*- coding: utf-8 -*-
+# this file is released under public domain and you can use without limitations
+
+# -------------------------------------------------------------------------
+# This is a sample controller
+# - index is the default action of any application
+# - user is required for authentication and authorization
+# - download is for downloading files uploaded in the db (does streaming)
+# -------------------------------------------------------------------------
+
+
+def index():
+    """
+    example action using the internationalization operator T and flash
+    rendered by views/default/index.html or views/generic.html
+
+    if you need a simple wiki simply replace the two lines below with:
+    return auth.wiki()
+    """
+    response.flash = T("Hello World")
+    return dict(message=T('Welcome to web2py!'))
+
+
+def user():
+    """
+    exposes:
+    http://..../[app]/default/user/login
+    http://..../[app]/default/user/logout
+    http://..../[app]/default/user/register
+    http://..../[app]/default/user/profile
+    http://..../[app]/default/user/retrieve_password
+    http://..../[app]/default/user/change_password
+    http://..../[app]/default/user/bulk_register
+    use @auth.requires_login()
+        @auth.requires_membership('group name')
+        @auth.requires_permission('read','table name',record_id)
+    to decorate functions that need access control
+    also notice there is http://..../[app]/appadmin/manage/auth to allow administrator to manage users
+    """
+    return dict(form=auth())
+
+
+@cache.action()
+def download():
+    """
+    allows downloading of uploaded files
+    http://..../[app]/default/download/[filename]
+    """
+    return response.download(request, db)
+
+
+def call():
+    """
+    exposes services. for example:
+    http://..../[app]/default/call/jsonrpc
+    decorate with @services.jsonrpc the functions to expose
+    supports xml, json, xmlrpc, jsonrpc, amfrpc, rss, csv
+    """
+    return service()
+
+def BuscarCliente():
+	form = SQLFORM.factory(
+		Field('nome', 'string', requires=IS_NOT_EMPTY(error_message='Digite seu nome')),
+		Field('datanasc', 'date', label='Data de nascimento', requires=IS_DATE(error_message='Insira uma data válida')),
+		submit_button='Buscar',
+	)
+	form.add_button('Continuar', URL('CadastrarCliente'))
+	query = Cliente.id < 0
+	nomeCliente=''
+	resultados=''
+	if form.process().accepted:
+		nomeCliente = form.vars.nome
+		data_nasc_Cliente = form.vars.datanasc
+		if nomeCliente and data_nasc_Cliente:
+			query = Cliente.id > 0
+			query &= Cliente.nome.like('%' + nomeCliente + '%')
+			query &= Cliente.data_nasc == form.vars.data_nasc_Cliente
+	elif form.errors:
+		response.flash = 'Verifique as informações inseridas!'
+	count = db(query).count()
+	resultados = db(query).select()
+	msg = response.flash = T('%s registros encontrados' %count)
+	return dict(form=form, resultados=resultados)
+
+def CadastrarCliente():
+	form = SQLFORM.factory(Cliente, Telefone, Endereco, submit_button='Salvar')
+	if form.process(keepvalues=True).accepted:
+		id = Cliente.insert(**db.clientes._filter_fields(form.vars))
+		form.vars.codCliente = id
+		idCliente = id
+		id = Endereco.insert(**db.endereco._filter_fields(form.vars))
+		idEndereco = id
+		id = Telefone.insert(**db.telefone._filter_fields(form.vars))
+		idTelefone = id
+		id = Endereco_Cliente.insert(codEndereco = int(idEndereco), codCliente = int(idCliente))
+		id = Telefone_Cliente.insert(codTelefone = int(idTelefone), codCliente = int(idCliente))
+		db.commit()
+		response.flash = 'Cliente cadastrado com sucesso!'
+	elif form.errors:
+		response.flash = 'Verifique as informações inseridas!'
+	return dict(form=form)
+
+def CadastrarPedido():
+	form = SQLFORM.factory(Pedido, submit_button='Salvar')
+	if form.process().accepted:
+		response.flash = 'Pedido cadastrado com sucesso!'
+		redirect(URL('CadastrarOrcamento'))
+	elif form.errors:
+		response.flash = 'Verifique as informações inseridas!'
+	return dict(form=form)
+
+def CadastrarItem():
+	form = SQLFORM.factory(Item,
+		Field('nome', requires(IS_NOT_EMPTY())),
+		Field('descricao', requires(IS_NOT_EMPTY())),
+		Field('precoUnitario', requires(IS_NOT_EMPTY())),
+		Field('quantidade', requires(IS_NOT_EMPTY())),
+		Field('unidade', requires(IS_NOT_EMPTY())),
+		submit_button='Adicionar ingrediente'
+	)
+	form.add_button('Calcular Preço', URL('CadastrarItem'))
+	form.add_button('Continuar', URL('CadastrarOrcamento'))
+	if form.process(keepvalues=True).accepted:
+		id = Item.insert(**db.item._filter_fields(form.vars))
+		db.commit()
+		redirect(URL('CadastrarItem'))
+		response.flash = 'Ingrediente cadastrado com sucesso!'
+	elif form.errors:
+		response.flash = 'Verifique as informações inseridas!'
+	return dict(form=form)
+
+def CadastrarOrcamento():
+	form = SQLFORM(Orcamento, submit_button='Salvar')
+	if form.process().accepted:
+		response.flash = 'Pedido cadastrado com sucesso!'
+		redirect(URL('CadastrarItem'))
+	elif form.errors:
+		response.flash = 'Verifique as informações inseridas!'
+	return dict(form=form)
+
+

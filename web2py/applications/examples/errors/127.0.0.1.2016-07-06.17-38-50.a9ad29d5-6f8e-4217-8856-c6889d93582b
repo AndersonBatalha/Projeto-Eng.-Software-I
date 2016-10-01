@@ -1,0 +1,21 @@
+(dp1
+S'output'
+p2
+S"<type 'exceptions.OSError'> [Errno 13] Permission denied: '/examples'"
+p3
+sS'layer'
+p4
+S'/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/examples/controllers/cache_examples.py'
+p5
+sS'code'
+p6
+S'import time\n\nresponse.view = \'cache_examples/generic.html\'\n\ndef cache_in_ram():\n    """cache the output of the lambda function in ram"""\n\n    t = cache.ram(\'time\', lambda: time.ctime(), time_expire=5)\n    return dict(time=t, link=A(\'click to reload\', _href=URL(r=request)))\n\n\ndef cache_on_disk():\n    """cache the output of the lambda function on disk"""\n\n    t = cache.disk(\'time\', lambda: time.ctime(), time_expire=5)\n    return dict(time=t, link=A(\'click to reload\', _href=URL(r=request)))\n\n\ndef cache_in_ram_and_disk():\n    """cache the output of the lambda function on disk and in ram"""\n\n    t = cache.ram(\'time\', lambda: cache.disk(\'time\', lambda:\n                  time.ctime(), time_expire=5), time_expire=5)\n    return dict(time=t, link=A(\'click to reload\', _href=URL(r=request)))\n\n\n@cache(request.env.path_info, time_expire=5, cache_model=cache.ram)\ndef cache_controller_in_ram():\n    """cache the output of the controller in ram"""\n\n    t = time.ctime()\n    return dict(time=t, link=A(\'click to reload\', _href=URL(r=request)))\n\n\n@cache(request.env.path_info, time_expire=5, cache_model=cache.disk)\ndef cache_controller_on_disk():\n    """cache the output of the controller on disk"""\n\n    t = time.ctime()\n    return dict(time=t, link=A(\'click to reload\', _href=URL(r=request)))\n\n\n@cache(request.env.path_info, time_expire=5, cache_model=cache.ram)\ndef cache_controller_and_view():\n    """cache the output of the controller rendered by the view in ram"""\n\n    t = time.ctime()\n    d = dict(time=t, link=A(\'click to reload\', _href=URL(r=request)))\n    return response.render(d)\n\nresponse._vars=response._caller(cache_controller_on_disk)\n'
+p7
+sS'snapshot'
+p8
+(dp9
+sS'traceback'
+p10
+S'Traceback (most recent call last):\n  File "/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/gluon/restricted.py", line 227, in restricted\n    exec ccode in environment\n  File "/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/applications/examples/controllers/cache_examples.py", line 51, in <module>\n  File "/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/gluon/globals.py", line 417, in <lambda>\n    self._caller = lambda f: f()\n  File "/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/gluon/cache.py", line 526, in __call__\n    self.time_expire)\n  File "/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/gluon/cache.py", line 473, in __call__\n    self.storage[key] = (now, value)\n  File "/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/gluon/cache.py", line 343, in __setitem__\n    val_file = recfile.open(key, mode=\'wb\', path=self.folder)\n  File "/media/anderson/5B8F2F2D60461C6E/BSI/Engenharia de Software I/Projeto disciplina/web2py/gluon/recfile.py", line 64, in open\n    os.makedirs(os.path.dirname(fullfilename))\n  File "/usr/lib/python2.7/os.py", line 150, in makedirs\n    makedirs(head, mode)\n  File "/usr/lib/python2.7/os.py", line 150, in makedirs\n    makedirs(head, mode)\n  File "/usr/lib/python2.7/os.py", line 150, in makedirs\n    makedirs(head, mode)\n  File "/usr/lib/python2.7/os.py", line 157, in makedirs\n    mkdir(name, mode)\nOSError: [Errno 13] Permission denied: \'/examples\'\n'
+p11
+s.
